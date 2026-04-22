@@ -258,9 +258,11 @@ echo "==> Service status"
 )
 
 echo "==> Restarting lume-browser.service"
-run_sudo systemctl restart lume-browser
+if has_cmd systemctl && systemctl cat lume-browser.service >/dev/null 2>&1; then
+  run_sudo systemctl restart lume-browser
+else
+  echo "==> Skipping lume-browser restart (service not found)"
+fi
 
 echo "==> Done"
-echo "Core:     http://${MDNS_HOSTNAME}:3011"
-echo "Frontend: http://${MDNS_HOSTNAME}:3012"
-echo "Player:   http://${MDNS_HOSTNAME}:3014"
+echo "Open http://${MDNS_HOSTNAME}"
