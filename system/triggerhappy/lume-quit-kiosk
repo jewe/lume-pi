@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Stop the kiosk (Cog) and restore tty1 login.
+#
+# Why:
+# - lume-browser.service has Restart=always, so a plain kill would relaunch it.
+# - lume-browser.service Conflicts=getty@tty1.service, so stopping the kiosk
+#   does not automatically restore the login prompt on tty1.
+
+if ! command -v sudo >/dev/null 2>&1; then
+  echo "ERROR: sudo not found" >&2
+  exit 1
+fi
+
+# Non-interactive sudo is required because the hotkey handler runs without a TTY.
+sudo -n /usr/local/sbin/lume-quit-kiosk-root

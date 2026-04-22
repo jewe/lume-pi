@@ -1,0 +1,21 @@
+[Unit]
+Description=Screen Control Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node __APP_FILE__
+Restart=always
+RestartSec=2
+User=__RUN_USER__
+
+# If you later decide you need DISPLAY/XAUTHORITY, uncomment and adjust:
+# Environment=DISPLAY=:0
+# Environment=XAUTHORITY=/home/__RUN_USER__/.Xauthority
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=screen-control
+
+[Install]
+WantedBy=multi-user.target

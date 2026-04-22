@@ -1,0 +1,15 @@
+interface=wlan0
+driver=nl80211
+
+ssid=${LUME_WIFI_AP_SSID}
+wpa_passphrase=${LUME_WIFI_AP_PSK}
+
+country_code=${LUME_WIFI_AP_COUNTRY}
+hw_mode=g
+channel=7
+wmm_enabled=1
+
+auth_algs=1
+wpa=2
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP

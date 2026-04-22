@@ -1,0 +1,20 @@
+# Lume browser kiosk configuration
+#
+# Change KIOSK_URL to override the page loaded on boot.
+#
+# If video output doesn't appear, try changing DRM_DEVICE:
+# - /dev/dri/card1 (default)
+# - /dev/dri/card0
+
+KIOSK_URL="__KIOSK_URL__"
+
+# DRM device - try card0 if card1 does not work
+DRM_DEVICE=/dev/dri/card1
+
+# COG platform
+COG_PLATFORM=drm
+COG_PLATFORM_PARAMS=renderer=gles
+
+# Try to expose WebKit inspector (remote devtools)
+WEBKIT_ENABLE_DEVELOPER_EXTRAS=1
+WEBKIT_INSPECTOR_HTTP_SERVER=127.0.0.1:2999

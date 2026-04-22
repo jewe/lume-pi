@@ -1,0 +1,44 @@
+[Unit]
+Description=Lume Player Browser (Cog kiosk)
+After=network-online.target systemd-udev-settle.service
+Wants=network-online.target systemd-udev-settle.service
+
+# Kiosk mode: ensure we can take over a real console VT.
+# On Raspberry Pi OS Lite, getty@tty1 is commonly active and will otherwise own tty1.
+Conflicts=getty@tty1.service
+After=getty@tty1.service
+
+[Service]
+EnvironmentFile=/etc/lume-browser.conf
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=G_MESSAGES_DEBUG=all
+Environment=DCONF_PROFILE=/dev/null
+Environment=GSETTINGS_BACKEND=memory
+Environment=DBUS_SESSION_BUS_ADDRESS=disabled:
+
+# Keep the variables literal here; systemd will expand them at runtime from EnvironmentFile.
+ExecStartPre=/bin/bash -c 'sleep 10'
+ExecStartPre=/bin/bash -c 'until [ -e $DRM_DEVICE ]; do sleep 1; done'
+ExecStartPre=/bin/bash -c 'fuser -k $DRM_DEVICE || true'
+# Clear WPE/Cog cache to avoid stale state between restarts.
+ExecStartPre=/bin/bash -c 'rm -rf /home/user/.cache/wpe/ || true'
+ExecStartPre=/bin/bash -c 'rm -rf /home/user/.local/share/wpe/storage/ || true'
+ExecStart=/usr/bin/cog --platform=${COG_PLATFORM} --platform-params=${COG_PLATFORM_PARAMS} ${KIOSK_URL}
+
+User=user
+SupplementaryGroups=video render input
+
+# Bind this service to tty1 so Cog can actually render to the local console.
+StandardOutput=journal+console
+StandardError=journal+console
+
+# Helpful for diagnosing early start issues in the journal.
+Environment=G_MESSAGES_DEBUG=all
+
+Restart=always
+RestartSec=3
+TimeoutStartSec=30
+SyslogIdentifier=lume-browser
+
+[Install]
+WantedBy=multi-user.target

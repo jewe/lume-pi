@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  lume-display-control on
+  lume-display-control off
+  lume-display-control bright <0-100>
+
+Notes:
+  - Uses DDC/CI via ddcutil.
+  - Power control uses VCP code D6 (01=on, 04=off)
+  - Brightness uses VCP code 10
+USAGE
+}
+
+cmd="${1:-}"
+
+case "$cmd" in
+  on)
+    ddcutil setvcp D6 01
+    ;;
+  off)
+    ddcutil setvcp D6 04
+    ;;
+  bright)
+    value="${2:-}"
+    if [[ -z "$value" ]]; then
+      echo "ERROR: Missing brightness value (0-100)." >&2
+      usage
+      exit 1
+    fi
+    if ! [[ "$value" =~ ^[0-9]+$ ]]; then
+      echo "ERROR: Brightness value must be an integer 0-100." >&2
+      usage
+      exit 1
+    fi
+    if (( value < 0 || value > 100 )); then
+      echo "ERROR: Brightness value must be between 0 and 100." >&2
+      usage
+      exit 1
+    fi
+    ddcutil setvcp 10 "$value"
+    ;;
+  -h|--help|help|"")
+    usage
+    exit 0
+    ;;
+  *)
+    echo "ERROR: Unknown command: $cmd" >&2
+    usage
+    exit 1
+    ;;
+esac

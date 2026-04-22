@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Lume Pi Monitoring Snapshot every 60 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=60min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

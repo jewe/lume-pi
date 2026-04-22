@@ -1,0 +1,24 @@
+[Unit]
+Description=Lume Borg Backup (db dump + rails storage)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/local/bin/lume-backup
+
+# borg needs access to /etc/backup-secrets
+User=__RUN_USER__
+
+# Access:
+# - docker group for /var/run/docker.sock
+# - lume-backup group for /etc/backup-secrets
+SupplementaryGroups=__SUP_GROUPS__
+
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lume-backup

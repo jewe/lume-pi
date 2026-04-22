@@ -1,0 +1,13 @@
+[Unit]
+Description=Lume Wi-Fi AP: set wlan0 static IP
+Before=hostapd.service dnsmasq.service
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/bin/bash -c 'set -e; ip link set wlan0 up; ip addr show dev wlan0 | grep -q "192.168.4.1/24" || ip addr add 192.168.4.1/24 dev wlan0'
+
+[Install]
+WantedBy=multi-user.target

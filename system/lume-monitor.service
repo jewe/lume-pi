@@ -1,0 +1,11 @@
+[Unit]
+Description=Lume Pi Monitoring Snapshot (temp/throttling/ram/disk)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/lume-monitor
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lume-monitor

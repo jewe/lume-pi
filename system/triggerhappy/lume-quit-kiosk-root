@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Root-only helper.
+#
+# This is executed via sudo (non-interactive) from the triggerhappy hotkey handler.
+
+systemctl stop lume-browser.service || true
+systemctl start getty@tty1.service || true

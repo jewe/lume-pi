@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Create a Borg archive containing:
+# - a logical Postgres dump (pg_dump | gzip) saved as db_backup.sql.gz
+# - a tarball of the Rails storage docker volume saved as storage.tar
+#
+# Config:
+# - /etc/backup-secrets (borg repo + passphrase + retention)
+# - <this script dir>/../lume-pi/docker/.env (compose runtime env)
+
+has_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+load_env_file() {
+  local env_file="$1"
+  if [[ -f "$env_file" ]]; then
+    # shellcheck disable=SC1090
+    set -a
+    source "$env_file"
+    set +a
+  fi
+}
+
+require_var() {
+  local name="$1"
+  local value="${!name:-}"
+  if [[ -z "$value" ]]; then
+    echo "Missing required env var: $name" >&2
+    return 1
+  fi
+  return 0
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'USAGE'
+Usage:
+  lume-backup
+
+Reads:
+  /etc/backup-secrets
+  <lume-pi>/docker/.env
+
+USAGE
+  exit 0
+fi
+
+if ! has_cmd docker; then
+  echo "ERROR: docker is not installed." >&2
+  exit 1
+fi
+if ! docker compose version >/dev/null 2>&1; then
+  echo "ERROR: docker compose plugin is not available (expected 'docker compose')." >&2
+  exit 1
+fi
+if ! has_cmd borg; then
+  echo "ERROR: borg is not installed (expected /usr/bin/borg)." >&2
+  exit 1
+fi
+
+SECRETS_FILE="/etc/backup-secrets"
+if [[ ! -f "$SECRETS_FILE" ]]; then
+  echo "ERROR: Secrets file not found: ${SECRETS_FILE}" >&2
+  exit 1
+fi
+
+load_env_file "$SECRETS_FILE"
+require_var BORG_REPO
+require_var BORG_PASSPHRASE
+
+# Assume this file lives at /usr/local/bin. The repo copy lives under ~/lume-pi.
+# We default to __DEFAULT_LUME_PI_DIR__, but allow override via LUME_PI_DIR.
+LUME_PI_DIR="${LUME_PI_DIR:-__DEFAULT_LUME_PI_DIR__}"
+COMPOSE_DIR="${LUME_PI_DIR}/docker"
+COMPOSE_ENV_FILE="${COMPOSE_DIR}/.env"
+COMPOSE_FILE="${COMPOSE_DIR}/docker-compose.pi.yml"
+
+if [[ ! -f "$COMPOSE_ENV_FILE" ]]; then
+  echo "ERROR: compose env file not found: ${COMPOSE_ENV_FILE}" >&2
+  exit 1
+fi
+if [[ ! -f "$COMPOSE_FILE" ]]; then
+  echo "ERROR: compose file not found: ${COMPOSE_FILE}" >&2
+  exit 1
+fi
+
+load_env_file "$COMPOSE_ENV_FILE"
+
+# Docker env vars from compose env.
+POSTGRES_DB_VALUE="${POSTGRES_DB:-energypi}"
+POSTGRES_USER_VALUE="${POSTGRES_USER:-energypi}"
+POSTGRES_PASSWORD_VALUE="${POSTGRES_PASSWORD:-}"
+
+if [[ -z "$POSTGRES_PASSWORD_VALUE" ]]; then
+  echo "ERROR: POSTGRES_PASSWORD is missing in ${COMPOSE_ENV_FILE}" >&2
+  exit 1
+fi
+
+docker_compose() {
+  ( cd "$COMPOSE_DIR" && docker compose --env-file "$COMPOSE_ENV_FILE" -f "$COMPOSE_FILE" "$@" )
+}
+
+echo "==> Locating Rails storage volume via docker"
+core_cid="$(docker_compose ps -q core)"
+if [[ -z "$core_cid" ]]; then
+  echo "ERROR: Could not find running 'core' container. Is the lume stack up?" >&2
+  exit 1
+fi
+
+storage_volume="$(docker inspect "$core_cid" --format '{{range .Mounts}}{{if eq .Destination "/rails/storage"}}{{.Name}}{{end}}{{end}}')"
+if [[ -z "$storage_volume" ]]; then
+  echo "ERROR: Could not resolve docker volume name for /rails/storage from core container mounts." >&2
+  echo "       (Expected a named volume mounted at /rails/storage)" >&2
+  exit 1
+fi
+
+timestamp="$(date +%Y-%m-%dT%H-%M-%S)"
+prefix="${BORG_ARCHIVE_PREFIX:-lume-db-storage}"
+archive_name="${prefix}-${timestamp}"
+compression="${BORG_COMPRESSION:-lz4}"
+
+echo "==> Creating borg archive: ${archive_name}"
+echo "    - DB: ${POSTGRES_DB_VALUE} (user: ${POSTGRES_USER_VALUE})"
+echo "    - Storage volume: ${storage_volume}"
+
+# Ensure BORG_* variables are inherited by borg.
+export BORG_REPO
+export BORG_PASSPHRASE
+
+# Note: borg supports a single stdin stream. To include both DB dump + storage,
+# we create a temporary directory with:
+#   - db_backup.sql.gz
+#   - storage.tar (streamed from the docker volume)
+# Then we borg-create that directory.
+work_dir="$(mktemp -d -t lume-backup-XXXXXX)"
+cleanup() {
+  rm -rf "$work_dir"
+}
+trap cleanup EXIT
+
+echo "==> Writing DB dump to ${work_dir}/db_backup.sql.gz"
+docker_compose exec -T db pg_dump -U "$POSTGRES_USER_VALUE" "$POSTGRES_DB_VALUE" | gzip >"${work_dir}/db_backup.sql.gz"
+
+echo "==> Creating ${work_dir}/storage.tar from docker volume '${storage_volume}'"
+docker run --rm -v "${storage_volume}:/storage:ro" alpine:3.20 tar -C /storage -cf - . >"${work_dir}/storage.tar"
+
+echo "==> Creating borg archive from work dir"
+export BORG_REPO
+export BORG_PASSPHRASE
+borg create \
+  --compression "$compression" \
+  --stats \
+  "::${archive_name}" \
+  "$work_dir"
+
+echo "==> Pruning old archives"
+keep_daily="${BORG_KEEP_DAILY:-7}"
+keep_weekly="${BORG_KEEP_WEEKLY:-4}"
+keep_monthly="${BORG_KEEP_MONTHLY:-6}"
+
+borg prune \
+  --keep-daily "$keep_daily" \
+  --keep-weekly "$keep_weekly" \
+  --keep-monthly "$keep_monthly" \
+  --stats \
+  "${BORG_REPO}"
+
+echo "==> Backup complete: ${archive_name}"

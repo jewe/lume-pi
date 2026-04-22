@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Lume Pi monitoring snapshot.
+#
+# Logs to stdout (intended for journald via systemd oneshot service).
+#
+# Metrics:
+# - vcgencmd measure_temp
+# - vcgencmd get_throttled (decoded)
+# - RAM used/total
+# - Root filesystem (/) used/total
+
+has_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+human_bytes() {
+  # Prefer numfmt if available; fallback to raw bytes.
+  local bytes="${1:-0}"
+  if has_cmd numfmt; then
+    numfmt --to=iec-i --suffix=B --format="%.2f" "$bytes"
+  else
+    echo "${bytes}B"
+  fi
+}
+
+decode_throttled() {
+  local hex="$1"
+  local v
+  v=$((hex))
+
+  local -a flags=()
+
+  # Current status bits
+  ((v & 0x1)) && flags+=("under_voltage_now")
+  ((v & 0x2)) && flags+=("arm_freq_capped_now")
+  ((v & 0x4)) && flags+=("throttled_now")
+  ((v & 0x8)) && flags+=("soft_temp_limit_now")
+
+  # Historical bits ("has occurred")
+  ((v & 0x10000)) && flags+=("under_voltage_has_occurred")
+  ((v & 0x20000)) && flags+=("arm_freq_capped_has_occurred")
+  ((v & 0x40000)) && flags+=("throttling_has_occurred")
+  ((v & 0x80000)) && flags+=("soft_temp_limit_has_occurred")
+
+  if [[ ${#flags[@]} -eq 0 ]]; then
+    echo "ok"
+  else
+    (IFS=,; echo "${flags[*]}")
+  fi
+}
+
+measure_temp() {
+  if has_cmd vcgencmd; then
+    vcgencmd measure_temp
+  else
+    # Fallback to Linux thermal zone if present (milli-degC).
+    if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
+      local t
+      t="$(cat /sys/class/thermal/thermal_zone0/temp)"
+      awk -v x="$t" 'BEGIN{printf "temp=%.1f'\''C\n", x/1000}'
+    else
+      echo "temp=unknown"
+    fi
+  fi
+}
+
+get_throttled_human() {
+  if has_cmd vcgencmd; then
+    local raw
+    raw="$(vcgencmd get_throttled | awk -F= '{print $2}')"
+    # Expect raw like: 0x50005
+    local status
+    status="$(decode_throttled "$raw")"
+    echo "throttled=${raw} status=${status}"
+  else
+    echo "throttled=unknown status=vcgencmd_missing"
+  fi
+}
+
+ram_used_total_bytes() {
+  # Use /proc/meminfo to compute: used = MemTotal - MemAvailable
+  if [[ -f /proc/meminfo ]]; then
+    local mem_total_kb mem_avail_kb
+    mem_total_kb="$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)"
+    mem_avail_kb="$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)"
+    if [[ -n "$mem_total_kb" && -n "$mem_avail_kb" ]]; then
+      local total used
+      total=$((mem_total_kb * 1024))
+      used=$(((mem_total_kb - mem_avail_kb) * 1024))
+      echo "ram_used_bytes=${used} ram_total_bytes=${total} ram_used=$(human_bytes "$used") ram_total=$(human_bytes "$total")"
+      return 0
+    fi
+  fi
+
+  # Fallback to free if meminfo parsing fails
+  if has_cmd free; then
+    # free -b output: Mem: total used free shared buff/cache available
+    local total used
+    read -r _ total used _ < <(free -b | awk '/^Mem:/ {print $1, $2, $3}')
+    echo "ram_used_bytes=${used} ram_total_bytes=${total} ram_used=$(human_bytes "$used") ram_total=$(human_bytes "$total")"
+    return 0
+  fi
+
+  echo "ram_used_bytes=unknown ram_total_bytes=unknown"
+}
+
+root_used_total_bytes() {
+  if has_cmd df; then
+    # df -B1 / output: Filesystem 1B-blocks Used Available Use% Mounted on
+    local total used
+    read -r total used < <(df -B1 / | awk 'NR==2 {print $2, $3}')
+    echo "root_used_bytes=${used} root_total_bytes=${total} root_used=$(human_bytes "$used") root_total=$(human_bytes "$total")"
+    return 0
+  fi
+
+  echo "root_used_bytes=unknown root_total_bytes=unknown"
+}
+
+ts="$(date -Is)"
+
+echo "$(measure_temp)"
+echo "$(get_throttled_human)"
+echo "$(ram_used_total_bytes)"
+echo "$(root_used_total_bytes)"

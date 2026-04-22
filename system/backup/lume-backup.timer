@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Lume Borg Backup daily
+
+[Timer]
+# Default schedule; can be overridden by editing this unit
+# or by setting LUME_BACKUP_ONCALENDAR in /etc/backup-secrets and running setup-backup.sh again.
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+Unit=lume-backup.service
+
+[Install]
+WantedBy=timers.target

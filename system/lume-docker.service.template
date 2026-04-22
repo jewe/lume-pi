@@ -1,0 +1,32 @@
+[Unit]
+Description=Lume System (Docker Compose)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+
+# Keep the working directory explicitly pinned so relative paths inside compose work.
+WorkingDirectory=__COMPOSE_DIR__
+
+# Use the docker compose plugin.
+ExecStart=/usr/bin/docker compose --env-file __COMPOSE_ENV_FILE__ -f __COMPOSE_FILE__ up -d
+ExecStop=/usr/bin/docker compose --env-file __COMPOSE_ENV_FILE__ -f __COMPOSE_FILE__ down
+
+# Ensure the service is considered active after the oneshot finishes.
+RemainAfterExit=yes
+
+User=__RUN_USER__
+
+# Give the unit a stable environment (avoid surprises due to different PATHs).
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+TimeoutStartSec=0
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lume-docker
+
+[Install]
+WantedBy=multi-user.target

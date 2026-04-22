@@ -1,0 +1,4 @@
+# Intentionally empty.
+# Self-signed certificates should be placed next to this file:
+# - lume-player.local.crt
+# - lume-player.local.key
