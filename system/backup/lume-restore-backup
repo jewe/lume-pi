@@ -84,7 +84,7 @@ export BORG_PASSPHRASE
 LUME_PI_DIR="${LUME_PI_DIR:-__DEFAULT_LUME_PI_DIR__}"
 COMPOSE_DIR="${LUME_PI_DIR}/docker"
 COMPOSE_ENV_FILE="${COMPOSE_DIR}/.env"
-COMPOSE_FILE="${COMPOSE_DIR}/docker-compose.pi.yml"
+COMPOSE_FILE="${COMPOSE_DIR}/docker-compose.yml"
 if [[ ! -f "$COMPOSE_ENV_FILE" || ! -f "$COMPOSE_FILE" ]]; then
   echo "ERROR: Could not find compose env/file under ${COMPOSE_DIR}" >&2
   exit 1

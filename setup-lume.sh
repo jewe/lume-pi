@@ -278,7 +278,7 @@ maybe_docker_login() {
 
 preflight_compose_pull() {
   # Fail fast if compose images can't be pulled (common cause: missing docker login).
-  local compose_file="${COMPOSE_DIR}/docker-compose.pi.yml"
+  local compose_file="${COMPOSE_DIR}/docker-compose.yml"
   local compose_env_file="${COMPOSE_DIR}/.env"
 
   if [[ ! -d "$COMPOSE_DIR" || ! -f "$compose_file" ]]; then
@@ -317,7 +317,7 @@ ensure_docker_service() {
 }
 
 install_lume_docker_service() {
-  local compose_file="${COMPOSE_DIR}/docker-compose.pi.yml"
+  local compose_file="${COMPOSE_DIR}/docker-compose.yml"
   local compose_env_file="${COMPOSE_DIR}/.env"
 
   if [[ ! -d "$COMPOSE_DIR" || ! -f "$compose_file" ]]; then

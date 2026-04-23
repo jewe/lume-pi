@@ -9,7 +9,7 @@ It supports two usage scenarios:
 
 ## What gets installed 
 
-The Docker stack runs these services (see `lume-pi/docker/docker-compose.pi.yml`):
+The Docker stack runs these services (see `lume-pi/docker/docker-compose.yml`):
 
 - **Core API (Rails)**: exposed as `http://<hostname>.local:3011`
 - **Frontend (Dashboard)**: exposed as `http://<hostname>.local:3012`
@@ -287,7 +287,7 @@ sudo systemctl restart lume-browser
 
 # Compose status (uses your runtime env)
 cd ~/lume-pi/docker
-docker compose --env-file .env -f docker-compose.pi.yml ps
+docker compose --env-file .env -f docker-compose.yml ps
 ```
 
 ## Optional — Send a screenshot/image via Telegram
@@ -336,7 +336,7 @@ sudo usermod -aG docker "$USER"
 Workaround (no group change):
 
 ```bash
-sudo docker compose --env-file "$HOME/lume-pi/docker/.env" -f "$HOME/lume-pi/docker/docker-compose.pi.yml" logs
+sudo docker compose --env-file "$HOME/lume-pi/docker/.env" -f "$HOME/lume-pi/docker/docker-compose.yml" logs
 ```
 
 ## Security notes

@@ -103,7 +103,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_DIR="${SCRIPT_DIR}/docker"
 
 COMPOSE_ENV_FILE="${COMPOSE_DIR}/.env"
-COMPOSE_FILE="${COMPOSE_DIR}/docker-compose.pi.yml"
+COMPOSE_FILE="${COMPOSE_DIR}/docker-compose.yml"
 
 if [[ ! -d "$COMPOSE_DIR" ]]; then
   echo "ERROR: Compose directory not found: ${COMPOSE_DIR}" >&2

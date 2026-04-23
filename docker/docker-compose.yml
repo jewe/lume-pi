@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-energypi}
-      POSTGRES_USER: ${POSTGRES_USER:-energypi}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-energypi}
+      POSTGRES_DB: ${POSTGRES_DB:-lume}
+      POSTGRES_USER: ${POSTGRES_USER:-lume}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-63275f2d4}
     volumes:
       - db_data:/var/lib/postgresql/data
     # Raspberry Pi-friendly defaults.
@@ -21,7 +21,7 @@ services:
       - "-c"
       - "effective_cache_size=256MB"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-energypi} -d ${POSTGRES_DB:-energypi}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lume} -d ${POSTGRES_DB:-lume}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,13 +30,13 @@ services:
   core:
     image: ${CORE_IMAGE:-lumeplayer/lume:core}
     environment:
-      RAILS_ENV: production
-      DATABASE_URL: postgres://${POSTGRES_USER:-energypi}:${POSTGRES_PASSWORD:-energypi}@db:5432/${POSTGRES_DB:-energypi}
-      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_ENV: ${RAILS_ENV:-production}
+      DATABASE_URL: postgres://${POSTGRES_USER:-lume}:${POSTGRES_PASSWORD:-63275f2d4}@db:5432/${POSTGRES_DB:-lume}
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:-6d37aa360ff905944eebff9053cc401e}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-e077bde63275f2d4d6e947e57b74d061df92c0d20e7d64736cdd3e7d8ee50}
 
-      BRANDING: ${BRANDING}
-      BRANDING_SHORT: ${BRANDING_SHORT}
+      BRANDING: ${BRANDING:-LUME}
+      BRANDING_SHORT: ${BRANDING_SHORT:-LUME}
 
       # Run Solid Queue (workers + scheduler + recurring) inside the Puma process.
       # This avoids needing a separate jobs container on the Pi.
@@ -86,10 +86,7 @@ services:
     environment:
       # Runtime-config (generated into /runtime-config.js by the image entrypoint)
       #
-      # Behind the reverse-proxy, the API is served from the same origin as the frontend.
-      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:-https://lume-player.local}
-      NUXT_PUBLIC_PLAYER_URL: ${NUXT_PUBLIC_PLAYER_URL:-https://lume-player.local/playr/}
-      
+      # Frontend derives URLs from `window.location.origin` behind the proxy.
       BRANDING: ${BRANDING}
       BRANDING_SHORT: ${BRANDING_SHORT}
     healthcheck:
@@ -109,8 +106,7 @@ services:
     environment:
       # Runtime-config (generated into /runtime-config.js by the image entrypoint)
       #
-      # Behind the reverse-proxy, the API is served from the same origin as the player.
-      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:-https://lume-player.local}
+      # Player derives URLs from `window.location.origin` behind the proxy.
       NUXT_PUBLIC_PLAYER_ID: ${NUXT_PUBLIC_PLAYER_ID:-}
       NUXT_PUBLIC_HEARTBEAT_INTERVAL_MINUTES: ${NUXT_PUBLIC_HEARTBEAT_INTERVAL_MINUTES:-10}
       NUXT_PUBLIC_DEBUG: ${NUXT_PUBLIC_DEBUG:-}

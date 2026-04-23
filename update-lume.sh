@@ -58,7 +58,7 @@ COMPOSE_DIR="${SCRIPT_DIR}/docker"
 
 COMPOSE_ENV_FILE="${COMPOSE_DIR}/.env"
 PROJECT_ENV_FILE="${SCRIPT_DIR}/.env"
-COMPOSE_FILE="${COMPOSE_DIR}/docker-compose.pi.yml"
+COMPOSE_FILE="${COMPOSE_DIR}/docker-compose.yml"
 
 has_cmd() {
   command -v "$1" >/dev/null 2>&1
