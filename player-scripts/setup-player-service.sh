@@ -11,9 +11,9 @@ set -euo pipefail
 #
 # URL:
 # - Reads LUME_HOSTNAME from lume-pi/.env
-# - If LUME_HOSTNAME looks like a base hostname (no dots), we assume mDNS and open: http://${LUME_HOSTNAME}.local:3014
+# - If LUME_HOSTNAME looks like a base hostname (no dots), we assume mDNS and open: http://${LUME_HOSTNAME}.local/playr
 # - If it already contains a dot (e.g. lume-player.local) or is an IP, it is used as-is.
-# - Always opens: http://<resolved-host>:3014
+# - Always opens: http://<resolved-host>/playr
 #
 # This script is intended to be run ON the Raspberry Pi (Raspberry Pi OS / Debian).
 
@@ -25,7 +25,7 @@ Usage:
 Environment:
   setup-player-service.sh optionally loads lume-pi/.env.
   Supported keys:
-    LUME_HOSTNAME=...     # base hostname (e.g. lume-player); will open http://<hostname>.local:3014 by default
+    LUME_HOSTNAME=...     # base hostname (e.g. lume-player); will open http://<hostname>.local/playr by default
                           # If you set a FQDN/IP (e.g. lume-player.local / 192.168.1.10), it is used as-is.
 
 Notes:
@@ -107,7 +107,7 @@ else
   KIOSK_HOST="lume-player.local"
 fi
 
-KIOSK_URL="http://${KIOSK_HOST}:3014/?playerId=1&debug=0"
+KIOSK_URL="http://${KIOSK_HOST}/playr/?playerId=1&debug=0"
 
 if ! is_debian_like; then
   echo "ERROR: This script currently supports Debian/Raspberry Pi OS (apt)." >&2

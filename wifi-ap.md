@@ -18,11 +18,11 @@ No secrets are hard-coded in this repo: you’ll store SSID/PSK in a local env f
 
 From your phone (after joining the Wi‑Fi):
 
-- Dashboard: `http://192.168.4.1:3012`
-- Player: `http://192.168.4.1:3014`
-- Core health: `http://192.168.4.1:3011/up`
+- Dashboard: `http://192.168.4.1/control`
+- Player: `http://192.168.4.1/playr`
+- Core health: `http://192.168.4.1/up`
 
-If mDNS works on your phone, you may also be able to use `http://<hostname>.local:3012`, but **the IP is the “always works” path**.
+If mDNS works on your phone, you may also be able to use `http://<hostname>.local/control`, but **the IP is the “always works” path**.
 
 ## Prereqs / warnings
 
@@ -58,8 +58,8 @@ What the script configures:
 1. On the phone, join the Wi‑Fi SSID you configured.
 2. If the phone warns “No internet” or “Connected without internet”, that’s normal (unless you also plugged `eth0` into the internet).
 3. Open:
-   - `http://192.168.4.1:3012` (dashboard)
-   - `http://192.168.4.1:3014` (player)
+   - `http://192.168.4.1/control` (dashboard)
+   - `http://192.168.4.1/playr` (player)
 
 iOS tip: if Safari doesn’t load immediately, turn Wi‑Fi off/on once after joining; iOS sometimes needs a moment to accept a “no internet” network.
 

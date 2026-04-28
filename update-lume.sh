@@ -203,11 +203,11 @@ require_var POSTGRES_PASSWORD || missing=1
 # Optional but strongly recommended (so the static SPAs point at the right backend).
 if [[ -z "${NUXT_PUBLIC_API_URL:-}" ]]; then
   echo "WARNING: NUXT_PUBLIC_API_URL is not set in ${COMPOSE_ENV_FILE} (frontend/player will not know where the API is)." >&2
-  echo "         Example: NUXT_PUBLIC_API_URL=http://${MDNS_HOSTNAME}:3011" >&2
+  echo "         Example: NUXT_PUBLIC_API_URL=http://${MDNS_HOSTNAME}" >&2
 fi
 if [[ -z "${NUXT_PUBLIC_PLAYER_URL:-}" ]]; then
   echo "WARNING: NUXT_PUBLIC_PLAYER_URL is not set in ${COMPOSE_ENV_FILE} (frontend preview links may be wrong)." >&2
-  echo "         Example: NUXT_PUBLIC_PLAYER_URL=http://${MDNS_HOSTNAME}:3014" >&2
+  echo "         Example: NUXT_PUBLIC_PLAYER_URL=http://${MDNS_HOSTNAME}/playr" >&2
 fi
 
 warn_if_template_hostname NUXT_PUBLIC_API_URL

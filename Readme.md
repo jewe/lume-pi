@@ -11,9 +11,9 @@ It supports two usage scenarios:
 
 The Docker stack runs these services (see `lume-pi/docker/docker-compose.yml`):
 
-- **Core API (Rails)**: exposed as `http://<hostname>.local:3011`
-- **Frontend (Dashboard)**: exposed as `http://<hostname>.local:3012`
-- **Player (Web UI)**: exposed as `http://<hostname>.local:3014`
+- **Core API (Rails)**: exposed as `http://<hostname>.local`
+- **Frontend (Dashboard)**: exposed as `http://<hostname>.local/control`
+- **Player **: exposed as `http://<hostname>.local/playr`
 - **Postgres** (internal)
 
 Systemd units created by the scripts:
@@ -68,9 +68,9 @@ chmod +x ./setup-tailscale.sh
 
 After joining your tailnet, use the Pi's Tailscale name/IP instead of `*.local`:
 
-- Dashboard: `http://<tailscale-name>:3012`
-- Player: `http://<tailscale-name>:3014`
-- Core API health: `http://<tailscale-name>:3011/up`
+- Dashboard: `http://<tailscale-name>/control`
+- Player: `http://<tailscale-name>/playr`
+- Core API health: `http://<tailscale-name>/up`
 
 ## Step 1 — Copy `lume-pi/` to the Pi
 
@@ -100,7 +100,7 @@ For easier onboarding, copy the sample env files and edit them.
 `lume-pi/.env` is read by `setup-lume.sh` and can hold defaults like hostname and optional Docker registry credentials.
 
 Note: `LUME_HOSTNAME` is expected to be the *base* hostname (e.g. `lume-player`).
-The kiosk player (`player-scripts/setup-player-service.sh`) will open `http://<hostname>.local:3014` by default.
+The kiosk player (`player-scripts/setup-player-service.sh`) will open `http://<hostname>.local/playr` by default.
 
 ```bash
 cp .env.sample .env
@@ -121,13 +121,6 @@ At minimum you must set:
 - `POSTGRES_PASSWORD`
 - `RAILS_MASTER_KEY`
 - `SECRET_KEY_BASE`
-
-And you should update all URLs/origins to match your hostname (mDNS):
-
-- `NUXT_PUBLIC_API_URL=http://<hostname>.local:3011`
-- `NUXT_PUBLIC_PLAYER_URL=http://<hostname>.local:3014`
-- `CORS_ALLOWED_ORIGINS=...`
-- `ACTION_CABLE_ALLOWED_ORIGINS=...`
 
 Tip: after editing, it’s easy to accidentally leave a placeholder hostname in multiple places.
 Search/replace `lume-player.local` in `docker/.env` to match your chosen hostname.
@@ -167,9 +160,9 @@ journalctl -u lume-docker -f
 
 ### A3) Open in your browser (from another device)
 
-- Dashboard: `http://lume-player.local:3012`
-- Player: `http://lume-player.local:3014`
-- Core API (health): `http://lume-player.local:3011/up`
+- Dashboard: `http://lume-player.local/control`
+- Player: `http://lume-player.local/playr`
+- Core API (health): `http://lume-player.local/up`
 
 ## Scenario B — Docker + local player (Cog kiosk on the Pi)
 
