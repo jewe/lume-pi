@@ -182,7 +182,8 @@ sudo install -m 0644 "$CONF_SOURCE" /etc/lume-browser.conf
 
 # Replace placeholder with computed URL.
 # Escape for sed replacement: backslash, ampersand, and the delimiter (#).
-escaped_kiosk_url="$(printf '%s' "$KIOSK_URL" | sed 's/[\\&#]/\\\\&/g')"
+escaped_kiosk_url="$(printf '%s' "$KIOSK_URL" \
+  | sed -e 's/\\/\\\\/g' -e 's/&/\\&/g' -e 's/#/\\#/g')"
 sudo sed -i "s#__KIOSK_URL__#${escaped_kiosk_url}#g" /etc/lume-browser.conf
 
 echo "==> Installing systemd unit: lume-browser.service"

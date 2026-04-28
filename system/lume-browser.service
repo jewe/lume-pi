@@ -1,7 +1,8 @@
 [Unit]
 Description=Lume Player Browser (Cog kiosk)
-After=network-online.target systemd-udev-settle.service
+After=network-online.target systemd-udev-settle.service lume-docker.service
 Wants=network-online.target systemd-udev-settle.service
+Requires=lume-docker.service
 
 # Kiosk mode: ensure we can take over a real console VT.
 # On Raspberry Pi OS Lite, getty@tty1 is commonly active and will otherwise own tty1.
@@ -17,7 +18,7 @@ Environment=GSETTINGS_BACKEND=memory
 Environment=DBUS_SESSION_BUS_ADDRESS=disabled:
 
 # Keep the variables literal here; systemd will expand them at runtime from EnvironmentFile.
-ExecStartPre=/bin/bash -c 'sleep 10'
+ExecStartPre=/bin/bash -c 'timeout 60s bash -c "until curl -fsS --max-time 2 http://localhost/up >/dev/null; do sleep 1; done"'
 ExecStartPre=/bin/bash -c 'until [ -e $DRM_DEVICE ]; do sleep 1; done'
 ExecStartPre=/bin/bash -c 'fuser -k $DRM_DEVICE || true'
 # Clear WPE/Cog cache to avoid stale state between restarts.
@@ -37,7 +38,7 @@ Environment=G_MESSAGES_DEBUG=all
 
 Restart=always
 RestartSec=3
-TimeoutStartSec=30
+TimeoutStartSec=120
 SyslogIdentifier=lume-browser
 
 [Install]
