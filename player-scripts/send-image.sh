@@ -12,7 +12,8 @@ set -eu
 #   ./send-image.sh ./screen.png "optional caption"
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-ENV_FILE="${SCRIPT_DIR}/.env"
+REPO_DIR="$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd)"
+ENV_FILE="${REPO_DIR}/.env"
 
 if [ -f "$ENV_FILE" ]; then
   set -a

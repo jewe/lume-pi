@@ -23,8 +23,11 @@ set -euo pipefail
 # - DISPLAY/XAUTHORITY handling can be adjusted later (you mentioned another
 #   script will handle the display properties).
 
-# Absolute path to this directory (intended to be copied onto the Pi).
+# Absolute path to this script directory (intended to be copied onto the Pi).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Repo root (one level up from player-scripts/)
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 usage() {
   cat <<'USAGE'
@@ -86,7 +89,7 @@ UNIT_FILE="/etc/systemd/system/screen-control.service"
 echo "==> Writing service code: ${APP_FILE}"
 sudo mkdir -p "$APP_DIR"
 
-APP_SOURCE="${SCRIPT_DIR}/system/screen-control/screen-service.js"
+APP_SOURCE="${REPO_DIR}/system/screen-control/screen-service.js"
 if [[ ! -f "$APP_SOURCE" ]]; then
   echo "ERROR: Missing app source: ${APP_SOURCE}" >&2
   exit 1
@@ -96,7 +99,7 @@ sudo chmod 0644 "$APP_FILE"
 
 echo "==> Installing systemd unit: ${UNIT_FILE}"
 
-UNIT_SOURCE="${SCRIPT_DIR}/system/screen-control/screen-control.service.template"
+UNIT_SOURCE="${REPO_DIR}/system/screen-control/screen-control.service.template"
 if [[ ! -f "$UNIT_SOURCE" ]]; then
   echo "ERROR: Missing systemd template: ${UNIT_SOURCE}" >&2
   exit 1

@@ -44,8 +44,11 @@ if ! is_debian_like; then
   exit 1
 fi
 
-# Absolute path to this directory (intended to be copied onto the Pi).
+# Absolute path to this script directory (intended to be copied onto the Pi).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Repo root (one level up from player-scripts/)
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 TRIGGERS_DIR="/etc/triggerhappy/triggers.d"
 TRIGGER_FILE="${TRIGGERS_DIR}/lume.conf"
@@ -58,10 +61,10 @@ sudo apt-get update -y
 sudo apt-get install -y triggerhappy
 
 echo "==> Installing helper script: ${HELPER}"
-sudo install -m 0755 "${SCRIPT_DIR}/system/triggerhappy/lume-quit-kiosk" "${HELPER}"
+sudo install -m 0755 "${REPO_DIR}/system/triggerhappy/lume-quit-kiosk" "${HELPER}"
 
 echo "==> Installing root helper script: ${ROOT_HELPER}"
-sudo install -m 0755 "${SCRIPT_DIR}/system/triggerhappy/lume-quit-kiosk-root" "${ROOT_HELPER}"
+sudo install -m 0755 "${REPO_DIR}/system/triggerhappy/lume-quit-kiosk-root" "${ROOT_HELPER}"
 
 echo "==> Installing sudoers rule: ${SUDOERS_FILE}"
 
@@ -107,7 +110,7 @@ sudo bash -lc "cat > '$SUDOERS_FILE' <<EOF_SUDOERS
 #
 # IMPORTANT:
 # - Keep this limited to the single command we need.
-# - This file is installed by lume-pi/setup-triggerhappy.sh.
+# - This file is installed by lume-pi/player-scripts/setup-triggerhappy.sh.
 
 ${TH_USER} ALL=(root) NOPASSWD: /usr/local/sbin/lume-quit-kiosk-root
 EOF_SUDOERS"
@@ -118,7 +121,7 @@ sudo visudo -cf "$SUDOERS_FILE"
 
 echo "==> Installing trigger config: ${TRIGGER_FILE}"
 sudo mkdir -p "${TRIGGERS_DIR}"
-sudo install -m 0644 "${SCRIPT_DIR}/system/triggerhappy/lume.conf" "${TRIGGER_FILE}"
+sudo install -m 0644 "${REPO_DIR}/system/triggerhappy/lume.conf" "${TRIGGER_FILE}"
 
 echo "==> Enabling + restarting triggerhappy"
 sudo systemctl enable --now triggerhappy

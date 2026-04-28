@@ -41,8 +41,11 @@ is_debian_like() {
   [[ -f /etc/debian_version ]] && has_cmd apt-get
 }
 
-# Absolute path to this directory (intended to be copied onto the Pi).
+# Absolute path to this script directory (intended to be copied onto the Pi).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Repo root (one level up from player-scripts/)
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 if ! is_debian_like; then
   echo "ERROR: This script currently supports Debian/Raspberry Pi OS (apt)." >&2
@@ -99,7 +102,7 @@ fi
 install_display_control_helper() {
   echo "==> Installing helper: /usr/local/bin/lume-display-control"
   local helper_source
-  helper_source="${SCRIPT_DIR}/system/lume-display-control"
+  helper_source="${REPO_DIR}/system/lume-display-control"
   if [[ ! -f "$helper_source" ]]; then
     echo "ERROR: Missing helper script: ${helper_source}" >&2
     exit 1

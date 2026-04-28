@@ -19,8 +19,8 @@ The Docker stack runs these services (see `lume-pi/docker/docker-compose.yml`):
 Systemd units created by the scripts:
 
 - `lume-docker.service` (created by `setup-lume.sh`) – starts/stops the Docker Compose stack on boot
-- `lume-browser.service` (created by `setup-player.sh`) – starts Cog kiosk on boot (optional)
-- `triggerhappy.service` (created by `setup-triggerhappy.sh`) – enables Alt+F4 to exit the kiosk (optional)
+- `lume-browser.service` (created by `player-scripts/setup-player-service.sh` via `setup-player.sh`) – starts Cog kiosk on boot (optional)
+- `triggerhappy.service` (created by `player-scripts/setup-triggerhappy.sh` via `setup-player.sh`) – enables Alt+F4 to exit the kiosk (optional)
 
 ## Prerequisites
 
@@ -100,7 +100,7 @@ For easier onboarding, copy the sample env files and edit them.
 `lume-pi/.env` is read by `setup-lume.sh` and can hold defaults like hostname and optional Docker registry credentials.
 
 Note: `LUME_HOSTNAME` is expected to be the *base* hostname (e.g. `lume-player`).
-The kiosk player (`setup-player.sh`) will open `http://<hostname>.local:3014` by default.
+The kiosk player (`player-scripts/setup-player-service.sh`) will open `http://<hostname>.local:3014` by default.
 
 ```bash
 cp .env.sample .env
@@ -184,10 +184,14 @@ cd ~/lume-pi
 
 This will:
 
-- install `cog` and graphics/DRM dependencies
-- enable full KMS (`dtoverlay=vc4-kms-v3d`)
-- write `/etc/lume-browser.conf`
-- install and enable `lume-browser.service`
+- run `player-scripts/setup-player-service.sh` (Cog kiosk + systemd unit)
+- run optional extras (screen control, triggerhappy, kmsgrab, …)
+
+If you only want the Cog kiosk systemd service (no extras), run:
+
+```bash
+./player-scripts/setup-player-service.sh
+```
 
 Reboot is recommended after KMS changes:
 
@@ -225,7 +229,7 @@ If you want to control monitor power/brightness (DDC/CI), run:
 
 ```bash
 cd ~/lume-pi
-./setup-screen-control.sh
+./player-scripts/setup-screen-control.sh
 ```
 
 If a DDC/CI capable display is detected, it installs:
@@ -253,7 +257,7 @@ Install (on the Pi):
 
 ```bash
 cd ~/lume-pi
-./setup-triggerhappy.sh
+./player-scripts/setup-triggerhappy.sh
 ```
 
 Rollback:
@@ -301,10 +305,10 @@ cd ~/lume-pi
 nano .env
 
 # Send any image
-./send-image.sh ./screen.png
+./player-scripts/send-image.sh ./screen.png
 
 # If you prefer / need to force POSIX sh:
-sh ./send-image.sh ./screen.png
+sh ./player-scripts/send-image.sh ./screen.png
 ```
 
 ### If you want a screenshot of the current Pi display
@@ -313,7 +317,7 @@ If you installed `kmsgrab` (see `install_kmsgrab.sh`):
 
 ```bash
 sudo kmsgrab /tmp/screen.png
-./send-image.sh /tmp/screen.png
+./player-scripts/send-image.sh /tmp/screen.png
 ```
 
 ## Troubleshooting: docker.sock permission denied
