@@ -56,6 +56,10 @@ HELPER="/usr/local/bin/lume-quit-kiosk"
 ROOT_HELPER="/usr/local/sbin/lume-quit-kiosk-root"
 SUDOERS_FILE="/etc/sudoers.d/lume-quit-kiosk"
 
+SYSTEMD_DROPIN_DIR="/etc/systemd/system/triggerhappy.service.d"
+SYSTEMD_DROPIN_FILE="${SYSTEMD_DROPIN_DIR}/override.conf"
+SYSTEMD_DROPIN_SOURCE="${REPO_DIR}/system/triggerhappy/triggerhappy.service.d/override.conf"
+
 echo "==> Installing triggerhappy"
 sudo apt-get update -y
 sudo apt-get install -y triggerhappy
@@ -122,6 +126,11 @@ sudo visudo -cf "$SUDOERS_FILE"
 echo "==> Installing trigger config: ${TRIGGER_FILE}"
 sudo mkdir -p "${TRIGGERS_DIR}"
 sudo install -m 0644 "${REPO_DIR}/system/triggerhappy/lume.conf" "${TRIGGER_FILE}"
+
+echo "==> Installing systemd override: ${SYSTEMD_DROPIN_FILE}"
+sudo mkdir -p "${SYSTEMD_DROPIN_DIR}"
+sudo install -m 0644 "${SYSTEMD_DROPIN_SOURCE}" "${SYSTEMD_DROPIN_FILE}"
+sudo systemctl daemon-reload
 
 echo "==> Enabling + restarting triggerhappy"
 sudo systemctl enable --now triggerhappy
